@@ -1,49 +1,25 @@
 import os
-from dataclasses import dataclass
-from typing import List, Optional
-from dotenv import load_dotenv
+from dataclasses import dataclass, field
+from bot.utils.logger import get_logger
+from typing import List, Dict
 
-class ConfigError(Exception):
-    pass
+logger = get_logger(__name__)
 
 @dataclass
 class Config:
-    bot_token: Optional[str]
-    llama_api_token: Optional[str]
-    admin_ids: List[int]
-    required_channels: List[dict]
+    bot_token: str = "8075757982:AAGJBRILTv4mApRXeBDuBtpJdHoS4aLg0C4"
+    admin_ids: List[int] = field(default_factory=lambda: [6236467772, 7795537801, 7632092580])
+    crypto_pay_token: str = "366714:AA1CdLN8HkGbSLXyHLQEKUzt7yYpGXDLqZw"
+    payment_token: str = "398062629:TEST:999999999_F91D8F69C042267444B74CC0B3C747757EB0E065"
+    webhook_url: str = "https://testbor.alwaysdata.net"
+    required_channels: List[Dict[str, str]] = field(default_factory=lambda: [
+        {"id": "@pythonnews_uzbekistan", "title": "Python Kanali"},
+        {"id": "@testbor_c", "title": "TestBor News"}
+    ])
 
-def load_config() -> Config:
-    load_dotenv()
-
-    bot_token = os.getenv('BOT_TOKEN')
-    llama_api_token = os.getenv('LLAMA_API_TOKEN')
-
-    admin_ids_str = os.getenv('ADMIN_IDS', '')
-    admin_ids = []
-    if admin_ids_str:
-        try:
-            admin_ids = [int(admin_id.strip()) for admin_id in admin_ids_str.split(',') if admin_id.strip()]
-        except ValueError:
-            raise ConfigError("ADMIN_IDS vergul bilan ajratilgan butun sonlar bo'lishi kerak")
-
-    required_channels = []
-    channels_str = os.getenv('REQUIRED_CHANNELS', '@pythonnews_uzbekistan:Python News Uzbekistan,@testbor_c:Testbor Channel')
-
-    for channel_info in channels_str.split(','):
-        if ':' in channel_info:
-            channel_id, channel_title = channel_info.split(':', 1)
-            required_channels.append({"id": channel_id.strip(), "title": channel_title.strip()})
-
-    if not required_channels:
-        required_channels = [
-            {"id": "@pythonnews_uzbekistan", "title": "Python News Uzbekistan"},
-            {"id": "@testbor_c", "title": "Testbor Channel"}
-        ]
-
-    return Config(
-        bot_token=bot_token,
-        llama_api_token=llama_api_token,
-        admin_ids=admin_ids,
-        required_channels=required_channels
-    )
+def load_config():
+    try:
+        return Config()
+    except Exception as e:
+        logger.error(f"Error loading config: {e}")
+        raise

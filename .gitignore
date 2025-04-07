@@ -8,6 +8,7 @@ __pycache__/
 *$py.class
 *.so
 .Python
+env/
 build/
 develop-eggs/
 dist/
@@ -25,7 +26,7 @@ wheels/
 *.egg
 
 # Virtual Environment
-.venv/
+.venv
 venv/
 ENV/
 
@@ -47,3 +48,5 @@ logs/
 .DS_Store
 Thumbs.db
 
+testbor.db
+database.db
