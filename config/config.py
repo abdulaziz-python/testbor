@@ -1,25 +1,29 @@
 import os
-from dataclasses import dataclass, field
-from bot.utils.logger import get_logger
-from typing import List, Dict
-
-logger = get_logger(__name__)
-
-@dataclass
-class Config:
-    bot_token: str = "8075757982:AAGJBRILTv4mApRXeBDuBtpJdHoS4aLg0C4"
-    admin_ids: List[int] = field(default_factory=lambda: [6236467772, 7795537801, 7632092580])
-    crypto_pay_token: str = "366714:AA1CdLN8HkGbSLXyHLQEKUzt7yYpGXDLqZw"
-    payment_token: str = "398062629:TEST:999999999_F91D8F69C042267444B74CC0B3C747757EB0E065"
-    webhook_url: str = "https://testbor.alwaysdata.net"
-    required_channels: List[Dict[str, str]] = field(default_factory=lambda: [
-        {"id": "@pythonnews_uzbekistan", "title": "Python Kanali"},
-        {"id": "@testbor_c", "title": "TestBor News"}
-    ])
+from dotenv import load_dotenv
 
 def load_config():
-    try:
-        return Config()
-    except Exception as e:
-        logger.error(f"Error loading config: {e}")
-        raise
+    load_dotenv()
+    return {
+        "bot_token": os.getenv("BOT_TOKEN"),
+        "payment_token": os.getenv("PAYMENT_TOKEN"),
+        "crypto_pay_token": os.getenv("CRYPTO_PAY_TOKEN", "366714:AAUG4V33VbFnikaLHQLGkHi0mGaN5likipo "),
+        "openrouter_api_key": os.getenv("OPENROUTER_API_KEY", "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"),
+        "db_host": os.getenv("DB_HOST", "localhost"),
+        "db_port": int(os.getenv("DB_PORT", 5432)),
+        "db_name": os.getenv("DB_NAME", "testbor"),
+        "db_user": os.getenv("DB_USER", "postgres"),
+        "db_password": os.getenv("DB_PASSWORD", ""),
+        "admin_ids": [int(x) for x in os.getenv("ADMIN_IDS").split(",") if x],
+        "required_channels": [
+            {"name": channel_name, "id": int(channel_id), "url": channel_url}
+            for channel_name, channel_id, channel_url in [
+                x.split(":") for x in os.getenv("REQUIRED_CHANNELS").split(";") if x
+            ]
+        ],
+        "webhook_domain": os.getenv("WEBHOOK_DOMAIN"),
+        "webhook_path": os.getenv("WEBHOOK_PATH", "/webhook"),
+        "webserver_host": os.getenv("WEBSERVER_HOST", "0.0.0.0"),
+        "webserver_port": int(os.getenv("WEBSERVER_PORT", 8443)),
+        "ssl_cert": os.getenv("SSL_CERT", ""),
+        "ssl_key": os.getenv("SSL_KEY", "")
+    }
