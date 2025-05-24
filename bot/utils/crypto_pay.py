@@ -1,7 +1,5 @@
 import aiohttp
 import asyncio
-import hmac
-import hashlib
 from bot.utils.logger import get_logger
 from config.config import load_config
 
