@@ -18,7 +18,7 @@ class ThrottlingMiddleware(BaseMiddleware):
             return await handler(event, data)
         current_time = time.time()
         self.requests[user_id] = [
-            t for t in self.requests user_id] if t > current_time - self.time_window
+            t for t in self.requests[user_id] if t > current_time - self.time_window
         ]
         if len(self.requests[user_id]) >= self.rate_limit:
             if isinstance(event, Message):
