@@ -1,49 +1,23 @@
-import aiohttp
-from typing import List, Dict
+from aiogram import Bot
 from bot.utils.logger import get_logger
+from config.config import load_config
 
 logger = get_logger(__name__)
+config = load_config()
 
-async def check_subscription(user_id: int, channels: List[Dict[str, str]]):
-    """Foydalanuvchi barcha kanallarga a'zo bo'lganligini tekshirish"""
-    
-    if not channels:
-        return True  # Agar kanallar ro'yxati bo'sh bo'lsa, tekshirish o'tkazildi
-
+async def check_subscription(user_id, channels):
+    bot = Bot.get_current()
+    if not bot:
+        bot = Bot(token=config.bot_token)
     try:
-        # Bitta ClientSession yaratamiz va har bir kanal uchun foydalanmiz
-        async with aiohttp.ClientSession() as session:
-            for channel in channels:
-                channel_id = channel["id"]
-                
-                # API so'rovini yuborish
-                async with session.get(
-                    f"https://api.telegram.org/bot{channel['token']}/getChatMember",
-                    params={"chat_id": channel_id, "user_id": user_id}
-                ) as response:
-                    if response.status != 200:
-                        # API xatosi
-                        logger.error(f"API error: {response.status} - {await response.text()}")
-                        continue
-                    
-                    result = await response.json()
-                    
-                    if not result.get("ok", False):
-                        # API xatosi
-                        logger.error(f"API error: {result}")
-                        continue
-                    
-                    status = result.get("result", {}).get("status", "")
-                    
-                    # "left", "kicked" yoki "restricted" (restrictions ban_in_all_groups bo'lsa)
-                    if status in ["left", "kicked"] or (
-                        status == "restricted" and not result.get("result", {}).get("can_send_messages", True)
-                    ):
-                        logger.info(f"User {user_id} is not subscribed to channel {channel_id}")
-                        return False
-            
-            logger.info(f"User {user_id} is subscribed to all required channels")
-            return True
+        for channel in channels:
+            chat_member = await bot.get_chat_member(channel["id"], user_id)
+            if chat_member.status in ["left", "kicked"]:
+                return False
+        return True
     except Exception as e:
-        logger.error(f"Error checking subscription for user {user_id}: {e}")
-        return True  # Xato bo'lganda, tekshirishni o'tkazilgan deb hisoblaymiz
+        logger.error(f"Error checking subscription for user {user_id}: {e}", exc_info=True)
+        return False
+    finally:
+        if not Bot.get_current():
+            await bot.session.close()
