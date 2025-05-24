@@ -57,7 +57,7 @@ def create_crypto_payment_options_keyboard():
 
 def create_contact_admin_keyboard():
     return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="👨‍💻 Admin bilan bog'lanish", url="https://t.me/y0rdam_42")],
+        [InlineKeyboardButton(text="👨‍💻 Admin bilan bog'lanish", url="https://t.me/yordam_42")],
         [InlineKeyboardButton(text="🔙 Orqaga", callback_data="back_to_main")]
     ])
 
