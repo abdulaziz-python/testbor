@@ -47,7 +47,7 @@ async def cmd_admin(message: Message):
     except Exception as e:
         logger.error(f"Error in cmd_admin for user {message.from_user.id}: {e}", exc_info=True)
         await message.answer(
-            "Xatolik yuz berdi. Iltimos, admin bilan bog'laning: @y0rdam_42"
+            "Xatolik yuz berdi. Iltimos, admin bilan bog'laning: @yordam_42"
         )
 
 @router.callback_query(F.data == "admin_users")
@@ -72,7 +72,7 @@ async def process_admin_users(callback_query: CallbackQuery):
     except Exception as e:
         logger.error(f"Error in admin_users for user {user_id}: {e}", exc_info=True)
         await callback_query.message.edit_text(
-            "Xatolik yuz berdi. Iltimos, admin bilan bog'laning: @y0rdam_42",
+            "Xatolik yuz berdi. Iltimos, admin bilan bog'laning: @yordam_42",
             reply_markup=create_back_keyboard("back_to_admin")
         )
 
@@ -90,7 +90,7 @@ async def process_admin_set_limit(callback_query: CallbackQuery, state: FSMConte
     except Exception as e:
         logger.error(f"Error in admin_set_limit for user {user_id}: {e}", exc_info=True)
         await callback_query.message.edit_text(
-            "Xatolik yuz berdi. Iltimos, admin bilan bog'laning: @y0rdam_42",
+            "Xatolik yuz berdi. Iltimos, admin bilan bog'laning: @yordam_42",
             reply_markup=create_back_keyboard("back_to_admin")
         )
 
@@ -124,7 +124,7 @@ async def process_admin_user_id(message: Message, state: FSMContext):
     except Exception as e:
         logger.error(f"Error in process_admin_user_id for user {user_id}: {e}", exc_info=True)
         await message.answer(
-            "Xatolik yuz berdi. Iltimos, admin bilan bog'laning: @y0rdam_42",
+            "Xatolik yuz berdi. Iltimos, admin bilan bog'laning: @yordam_42",
             reply_markup=create_back_keyboard("back_to_admin")
         )
 
@@ -157,7 +157,7 @@ async def process_admin_new_limit(message: Message, state: FSMContext):
     except Exception as e:
         logger.error(f"Error in process_admin_new_limit for user {user_id}: {e}", exc_info=True)
         await message.answer(
-            "Xatolik yuz berdi. Iltimos, admin bilan bog'laning: @y0rdam_42",
+            "Xatolik yuz berdi. Iltimos, admin bilan bog'laning: @yordam_42",
             reply_markup=create_back_keyboard("back_to_admin")
         )
 
@@ -175,7 +175,7 @@ async def process_admin_broadcast(callback_query: CallbackQuery, state: FSMConte
     except Exception as e:
         logger.error(f"Error in admin_broadcast for user {user_id}: {e}", exc_info=True)
         await callback_query.message.edit_text(
-            "Xatolik yuz berdi. Iltimos, admin bilan bog'laning: @y0rdam_42",
+            "Xatolik yuz berdi. Iltimos, admin bilan bog'laning: @yordam_42",
             reply_markup=create_back_keyboard("back_to_admin")
         )
 
@@ -218,7 +218,7 @@ async def process_admin_broadcast_message(message: Message, state: FSMContext):
     except Exception as e:
         logger.error(f"Error in process_admin_broadcast_message for user {user_id}: {e}", exc_info=True)
         await message.answer(
-            "Xatolik yuz berdi. Iltimos, admin bilan bog'laning: @y0rdam_42",
+            "Xatolik yuz berdi. Iltimos, admin bilan bog'laning: @yordam_42",
             reply_markup=create_back_keyboard("back_to_admin")
         )
 
@@ -298,7 +298,7 @@ async def process_confirm_broadcast(callback_query: CallbackQuery, state: FSMCon
     except Exception as e:
         logger.error(f"Error in confirm_broadcast for user {user_id}: {e}", exc_info=True)
         await callback_query.message.edit_text(
-            "Xatolik yuz berdi. Iltimos, admin bilan bog'laning: @y0rdam_42",
+            "Xatolik yuz berdi. Iltimos, admin bilan bog'laning: @yordam_42",
             reply_markup=create_back_keyboard("back_to_admin")
         )
 
@@ -310,4 +310,278 @@ async def process_admin_set_premium(callback_query: CallbackQuery, state: FSMCon
             await callback_query.answer("⛔ Sizda admin huquqlari yo'q", show_alert=True)
             return
         await callback_query.message.edit_text(
-            "
+            "Premium statusini o'zgartirish uchun foydalanuvchi ID raqamini kiriting:"
+        )
+        await state.set_state(AdminStates.waiting_for_premium_user_id)
+    except Exception as e:
+        logger.error(f"Error in admin_set_premium for user {user_id}: {e}", exc_info=True)
+        await callback_query.message.edit_text(
+            "Xatolik yuz berdi. Iltimos, admin bilan bog'laning: @yordam_42",
+            reply_markup=create_back_keyboard("back_to_admin")
+        )
+
+@router.message(AdminStates.waiting_for_premium_user_id)
+async def process_premium_user_id(message: Message, state: FSMContext):
+    user_id = message.from_user.id
+    try:
+        if user_id not in config.admin_ids:
+            await message.answer("⛔ Sizda admin huquqlari yo'q")
+            await state.clear()
+            return
+        target_user_id = int(message.text.strip())
+        user = user_cache.get(target_user_id)
+        if not user:
+            user = await get_user(target_user_id)
+            user_cache[target_user_id] = user
+        if user:
+            await state.update_data(target_user_id=target_user_id)
+            await message.answer(
+                f"{user['full_name']} (ID: {target_user_id}) uchun premium statusini tanlang:",
+                reply_markup=create_premium_status_keyboard()
+            )
+        else:
+            await message.answer(
+                "Foydalanuvchi topilmadi. Iltimos, qayta urinib ko'ring yoki admin paneliga qayting.",
+                reply_markup=create_back_keyboard("back_to_admin")
+            )
+    except ValueError:
+        await message.answer(
+            "Iltimos, to'g'ri ID raqamini kiriting.",
+            reply_markup=create_back_keyboard("back_to_admin")
+        )
+    except Exception as e:
+        logger.error(f"Error in process_premium_user_id for user {user_id}: {e}", exc_info=True)
+        await message.answer(
+            "Xatolik yuz berdi. Iltimos, admin bilan bog'laning: @yordam_42",
+            reply_markup=create_back_keyboard("back_to_admin")
+        )
+
+@router.callback_query(F.data.in_(["set_premium_true", "set_premium_false"]))
+async def process_set_premium_status(callback_query: CallbackQuery, state: FSMContext):
+    user_id = callback_query.from_user.id
+    try:
+        if user_id not in config.admin_ids:
+            await callback_query.answer("⛔ Sizda admin huquqlari yo'q", show_alert=True)
+            return
+        data = await state.get_data()
+        target_user_id = data.get("target_user_id")
+        status = callback_query.data == "set_premium_true"
+        await set_premium_status(target_user_id, status)
+        status_text = "faollashtirildi" if status else "o'chirildi"
+        await callback_query.message.edit_text(
+            f"✅ {target_user_id} ID raqamli foydalanuvchi uchun premium statusi {status_text}.",
+            reply_markup=create_admin_panel_keyboard()
+        )
+        user_cache.pop(target_user_id, None)
+        await state.clear()
+    except Exception as e:
+        logger.error(f"Error in set_premium_status for user {user_id}: {e}", exc_info=True)
+        await callback_query.message.edit_text(
+            "Xatolik yuz berdi. Iltimos, admin bilan bog'laning: @yordam_42",
+            reply_markup=create_back_keyboard("back_to_admin")
+        )
+
+@router.callback_query(F.data == "admin_stats")
+async def process_admin_stats(callback_query: CallbackQuery):
+    user_id = callback_query.from_user.id
+    try:
+        if user_id not in config.admin_ids:
+            await callback_query.answer("⛔ Sizda admin huquqlari yo'q", show_alert=True)
+            return
+        stats = await get_user_stats()
+        text = (
+            f"📊 Bot statistikasi\n\n"
+            f"👥 Jami foydalanuvchilar: {stats['total_users']}\n"
+            f"💎 Premium foydalanuvchilar: {stats['premium_users']}\n"
+            f"📝 Yaratilgan testlar: {stats['total_tests']}\n"
+            f"⭐️ Taqsimlangan yulduzlar: {stats['total_stars']}"
+        )
+        await callback_query.message.edit_text(
+            text,
+            reply_markup=create_back_keyboard("back_to_admin")
+        )
+    except Exception as e:
+        logger.error(f"Error in admin_stats for user {user_id}: {e}", exc_info=True)
+        await callback_query.message.edit_text(
+            "Xatolik yuz berdi. Iltimos, admin bilan bog'laning: @yordam_42",
+            reply_markup=create_back_keyboard("back_to_admin")
+        )
+
+@router.callback_query(F.data == "admin_generate_promo")
+async def process_admin_generate_promo(callback_query: CallbackQuery, state: FSMContext):
+    user_id = callback_query.from_user.id
+    try:
+        if user_id not in config.admin_ids:
+            await callback_query.answer("⛔ Sizda admin huquqlari yo'q", show_alert=True)
+            return
+        await callback_query.message.edit_text(
+            "Promo kodning amal qilish muddatini kunlarda kiriting (masalan, 30):"
+        )
+        await state.set_state(AdminStates.waiting_for_promo_duration)
+    except Exception as e:
+        logger.error(f"Error in admin_generate_promo for user {user_id}: {e}", exc_info=True)
+        await callback_query.message.edit_text(
+            "Xatolik yuz berdi. Iltimos, admin bilan bog'laning: @yordam_42",
+            reply_markup=create_back_keyboard("back_to_admin")
+        )
+
+@router.message(AdminStates.waiting_for_promo_duration)
+async def process_promo_duration(message: Message, state: FSMContext):
+    user_id = message.from_user.id
+    try:
+        if user_id not in config.admin_ids:
+            await message.answer("⛔ Sizda admin huquqlari yo'q")
+            await state.clear()
+            return
+        duration = int(message.text.strip())
+        if duration <= 0:
+            await message.answer("Iltimos, musbat son kiriting.")
+            return
+        await state.update_data(promo_duration=duration)
+        await message.answer("Yaratmoqchi bo'lgan promo kodlar sonini kiriting (masalan, 10):")
+        await state.set_state(AdminStates.waiting_for_promo_count)
+    except ValueError:
+        await message.answer(
+            "Iltimos, to'g'ri son kiriting.",
+            reply_markup=create_back_keyboard("back_to_admin")
+        )
+    except Exception as e:
+        logger.error(f"Error in process_promo_duration for user {user_id}: {e}", exc_info=True)
+        await message.answer(
+            "Xatolik yuz berdi. Iltimos, admin bilan bog'laning: @yordam_42",
+            reply_markup=create_back_keyboard("back_to_admin")
+        )
+
+@router.message(AdminStates.waiting_for_promo_count)
+async def process_promo_count(message: Message, state: FSMContext):
+    user_id = message.from_user.id
+    try:
+        if user_id not in config.admin_ids:
+            await message.answer("⛔ Sizda admin huquqlari yo'q")
+            await state.clear()
+            return
+        count = int(message.text.strip())
+        if count <= 0:
+            await message.answer("Iltimos, musbat son kiriting.")
+            return
+        data = await state.get_data()
+        duration = data.get("promo_duration")
+        promo_codes = []
+        for _ in range(count):
+            code = str(uuid.uuid4())[:8].upper()
+            await save_promo_code(code, duration)
+            promo_codes.append(code)
+        codes_text = "\n".join([f"• {code}" for code in promo_codes])
+        await message.answer(
+            f"✅ {count} ta promo kod yaratildi (amal qilish muddati: {duration} kun):\n\n{codes_text}",
+            reply_markup=create_admin_panel_keyboard()
+        )
+        await state.clear()
+    except ValueError:
+        await message.answer(
+            "Iltimos, to'g'ri son kiriting.",
+            reply_markup=create_back_keyboard("back_to_admin")
+        )
+    except Exception as e:
+        logger.error(f"Error in process_promo_count for user {user_id}: {e}", exc_info=True)
+        await message.answer(
+            "Xatolik yuz berdi. Iltimos, admin bilan bog'laning: @yordam_42",
+            reply_markup=create_back_keyboard("back_to_admin")
+        )
+
+@router.callback_query(F.data == "admin_set_admin")
+async def process_admin_set_admin(callback_query: CallbackQuery, state: FSMContext):
+    user_id = callback_query.from_user.id
+    try:
+        if user_id not in config.admin_ids:
+            await callback_query.answer("⛔ Sizda admin huquqlari yo'q", show_alert=True)
+            return
+        await callback_query.message.edit_text(
+            "Admin statusini o'zgartirish uchun foydalanuvchi ID raqamini kiriting:"
+        )
+        await state.set_state(AdminStates.waiting_for_admin_user_id)
+    except Exception as e:
+        logger.error(f"Error in admin_set_admin for user {user_id}: {e}", exc_info=True)
+        await callback_query.message.edit_text(
+            "Xatolik yuz berdi. Iltimos, admin bilan bog'laning: @yordam_42",
+            reply_markup=create_back_keyboard("back_to_admin")
+        )
+
+@router.message(AdminStates.waiting_for_admin_user_id)
+async def process_admin_user_id(message: Message, state: FSMContext):
+    user_id = message.from_user.id
+    try:
+        if user_id not in config.admin_ids:
+            await message.answer("⛔ Sizda admin huquqlari yo'q")
+            await state.clear()
+            return
+        target_user_id = int(message.text.strip())
+        user = user_cache.get(target_user_id)
+        if not user:
+            user = await get_user(target_user_id)
+            user_cache[target_user_id] = user
+        if user:
+            await state.update_data(target_user_id=target_user_id)
+            await message.answer(
+                f"{user['full_name']} (ID: {target_user_id}) uchun admin statusini tanlang:",
+                reply_markup=create_admin_status_keyboard()
+            )
+        else:
+            await message.answer(
+                "Foydalanuvchi topilmadi. Iltimos, qayta urinib ko'ring yoki admin paneliga qayting.",
+                reply_markup=create_back_keyboard("back_to_admin")
+            )
+    except ValueError:
+        await message.answer(
+            "Iltimos, to'g'ri ID raqamini kiriting.",
+            reply_markup=create_back_keyboard("back_to_admin")
+        )
+    except Exception as e:
+        logger.error(f"Error in process_admin_user_id for user {user_id}: {e}", exc_info=True)
+        await message.answer(
+            "Xatolik yuz berdi. Iltimos, admin bilan bog'laning: @yordam_42",
+            reply_markup=create_back_keyboard("back_to_admin")
+        )
+
+@router.callback_query(F.data.in_(["set_admin_true", "set_admin_false"]))
+async def process_set_admin_status(callback_query: CallbackQuery, state: FSMContext):
+    user_id = callback_query.from_user.id
+    try:
+        if user_id not in config.admin_ids:
+            await callback_query.answer("⛔ Sizda admin huquqlari yo'q", show_alert=True)
+            return
+        data = await state.get_data()
+        target_user_id = data.get("target_user_id")
+        status = callback_query.data == "set_admin_true"
+        await set_admin_status(target_user_id, status)
+        status_text = "faollashtirildi" if status else "o'chirildi"
+        await callback_query.message.edit_text(
+            f"✅ {target_user_id} ID raqamli foydalanuvchi uchun admin statusi {status_text}.",
+            reply_markup=create_admin_panel_keyboard()
+        )
+        user_cache.pop(target_user_id, None)
+        await state.clear()
+    except Exception as e:
+        logger.error(f"Error in set_admin_status for user {user_id}: {e}", exc_info=True)
+        await callback_query.message.edit_text(
+            "Xatolik yuz berdi. Iltimos, admin bilan bog'laning: @yordam_42",
+            reply_markup=create_back_keyboard("back_to_admin")
+        )
+
+@router.callback_query(F.data == "back_to_admin")
+async def process_back_to_admin(callback_query: CallbackQuery):
+    user_id = callback_query.from_user.id
+    try:
+        if user_id not in config.admin_ids:
+            await callback_query.answer("⛔ Sizda admin huquqlari yo'q", show_alert=True)
+            return
+        await callback_query.message.edit_text(
+            "👑 Admin paneli\n\nVariantni tanlang:",
+            reply_markup=create_admin_panel_keyboard()
+        )
+    except Exception as e:
+        logger.error(f"Error in back_to_admin for user {user_id}: {e}", exc_info=True)
+        await callback_query.message.edit_text(
+            "Xatolik yuz berdi. Iltimos, admin bilan bog'laning: @yordam_42",
+            reply_markup=create_back_keyboard("back_to_admin")
+        )
