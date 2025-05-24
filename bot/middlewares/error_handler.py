@@ -2,6 +2,7 @@ from aiogram import BaseMiddleware
 from aiogram.types import TelegramObject
 from bot.utils.logger import get_logger
 from config.config import load_config
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 logger = get_logger(__name__)
 config = load_config()
@@ -14,13 +15,13 @@ class ErrorHandlerMiddleware(BaseMiddleware):
             logger.error(f"Error in handler: {e}", exc_info=True)
             if hasattr(event, 'message') and event.message:
                 await event.message.answer(
-                    "❌ Botda xatolik yuz berdi. Iltimos, keyinroq qayta urinib ko'ring yoki admin bilan bog'laning: @y0rdam_42"
+                    "❌ Botda xatolik yuz berdi. Iltimos, keyinroq qayta urinib ko'ring yoki admin bilan bog'laning: @yordam_42"
                 )
             elif hasattr(event, 'callback_query') and event.callback_query:
                 await event.callback_query.message.edit_text(
-                    "❌ Botda xatolik yuz berdi. Iltimos, keyinroq qayta urinib ko'ring yoki admin bilan bog'laning: @y0rdam_42",
+                    "❌ Botda xatolik yuz berdi. Iltimos, keyinroq qayta urinib ko'ring yoki admin bilan bog'laning: @yordam_42",
                     reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-                        [InlineKeyboardButton(text="👨‍💻 Admin bilan bog'lanish", url="https://t.me/y0rdam_42")]
+                        [InlineKeyboardButton(text="👨‍💻 Admin bilan bog'lanish", url="https://t.me/yordam_42")]
                     ])
                 )
             for admin_id in config.admin_ids:
