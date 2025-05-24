@@ -21,7 +21,7 @@ from bot.keyboards.inline import (
 from bot.utils.database import (
     register_user, get_user, update_test_count, save_test_info, get_user_tests,
     get_user_stars, add_user_stars, spend_stars_for_premium, set_premium_status,
-    record_payment, update_payment_status
+    record_payment, update_payment_status, use_promo_code
 )
 from bot.utils.document import generate_test_document
 from bot.utils.subscription import check_subscription
@@ -787,68 +787,6 @@ async def process_help(callback_query: CallbackQuery):
         )
     except Exception as e:
         logger.error(f"Error in help for user {callback_query.from_user.id}: {e}", exc_info=True)
-        await callback_query.message.edit_text(
-            "Xatolik yuz berdi. Iltimos, admin bilan bog'laning: @y0rdam_42",
-            reply_markup=create_contact_admin_keyboard()
-        )
-
-@router.callback_query(F.data == "edit_test")
-async def process_edit_test(callback_query: CallbackQuery, state: FSMContext):
-    try:
-        await callback_query.message.edit_text(
-            "✏️ Test tahrirlash\n\n"
-            "Bu funksiya tez orada qo'shiladi. Hozirda yangi test yaratish orqali o'zingizga mos testni olishingiz mumkin.\n\n"
-            "Agar test formatida muammolarga duch kelsangiz, admin bilan bog'laning.",
-            reply_markup=create_back_keyboard()
-        )
-    except Exception as e:
-        logger.error(f"Error in edit_test for user {callback_query.from_user.id}: {e}", exc_info=True)
-        await callback_query.message.edit_text(
-            "Xatolik yuz berdi. Iltimos, admin bilan bog'laning: @y0rdam_42",
-            reply_markup=create_contact_admin_keyboard()
-        )
-
-@router.callback_query(F.data == "regenerate_test")
-async def process_regenerate_test(callback_query: CallbackQuery, state: FSMContext):
-    user_id = callback_query.from_user.id
-    try:
-        tests = await get_user_tests(user_id, limit=1)
-        if not tests:
-            await callback_query.message.edit_text(
-                "❌ Siz hali hech qanday test yaratmagansiz.",
-                reply_markup=create_back_keyboard()
-            )
-            return
-        test = tests[0]
-        subject = test["subject"]
-        questions_count = test["questions_count"]
-        await state.update_data(subject=subject, questions_count=questions_count, regenerate=True)
-        await callback_query.message.edit_text(
-            f"🔄 Testni qayta yaratish\n\n"
-            f"Fan: {subject}\n"
-            f"Savol soni: {questions_count}\n\n"
-            f"❓ Test uchun qo'shimcha tavsif kiriting (ixtiyoriy):",
-            reply_markup=create_skip_keyboard()
-        )
-        await state.set_state(TestGeneration.waiting_for_description)
-    except Exception as e:
-        logger.error(f"Error in regenerate_test for user {user_id}: {e}", exc_info=True)
-        await callback_query.message.edit_text(
-            "Xatolik yuz berdi. Iltimos, admin bilan bog'laning: @y0rdam_42",
-            reply_markup=create_contact_admin_keyboard()
-        )
-
-@router.callback_query(F.data == "change_format")
-async def process_change_format(callback_query: CallbackQuery):
-    try:
-        await callback_query.message.edit_text(
-            "📊 Test formati\n\n"
-            "Bu funksiya tez orada qo'shiladi. Hozirda testlar standart formatda taqdim etiladi.\n\n"
-            "Agarda maxsus format kerak bo'lsa, admin bilan bog'laning: @y0rdam_42",
-            reply_markup=create_back_keyboard()
-        )
-    except Exception as e:
-        logger.error(f"Error in change_format for user {callback_query.from_user.id}: {e}", exc_info=True)
         await callback_query.message.edit_text(
             "Xatolik yuz berdi. Iltimos, admin bilan bog'laning: @y0rdam_42",
             reply_markup=create_contact_admin_keyboard()
