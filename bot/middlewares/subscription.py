@@ -34,4 +34,15 @@ class SubscriptionMiddleware(BaseMiddleware):
                     return
             except Exception as e:
                 logger.error(f"Error in subscription check for user {user_id}: {e}", exc_info=True)
+                if isinstance(event, Message):
+                    await event.answer(
+                        "Xatolik yuz berdi. Iltimos, admin bilan bog'laning: @yordam_42"
+                    )
+                elif isinstance(event, CallbackQuery):
+                    await event.message.edit_text(
+                        "Xatolik yuz berdi. Iltimos, admin bilan bog'laning: @yordam_42",
+                        reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+                            [InlineKeyboardButton(text="👨‍💻 Admin bilan bog'lanish", url="https://t.me/yordam_42")]
+                        ])
+                    )
         return await handler(event, data)
